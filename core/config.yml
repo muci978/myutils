@@ -1,0 +1,56 @@
+# 日志相关
+log:
+  # 日志输出目录
+  logPath: "./log"
+  # 日志命名
+  logName: "cpp_core.log"
+  # DEBUG：0；INFO：1；WARN：2；ERROR：3
+  logLevel: -1
+  # 保存日志数量
+  logFileCount: 3
+  # 按大小轮转(MB)
+  rotateBySize: 5
+  # 按日期轮转
+  rotateByDate: true
+  # 异步模式
+  asyncMode: false
+  # 异步队列大小
+  asyncQueueSize: 8192
+  # 异步线程数
+  asyncThreadSize: 1
+
+# reactor相关
+reactor:
+  # 主reactor最大事件数量
+  masterMaxEvent: 10
+  # 主reactor超时时间(ms)
+  masterTimeout: -1
+  # 从reactor最大事件数量
+  slaveMaxEvent: 10
+  # 从reactor超时时间(ms)
+  slaveTimeout: -1
+  # 主从reactor
+  useSlave: false
+
+# 控制台相关
+console:
+  # 控制台监听ip
+  consoleListenIp: "127.0.0.1"
+  # 控制台监听port
+  consoleListenPort: 6700
+  # 控制台超时时间(s)
+  consoleTimeout: 30
+  # 控制台数量上线(防止恶意攻击)
+  consoleMaxCount: 1
+  # 是否打开控制台
+  useConsole: true
+
+# 进程相关
+process:
+  # 开启守护进程模式
+  daemonMode: true
+
+# 线程池相关
+threadpool:
+  # 使用线程池
+  useThreadPool: false
