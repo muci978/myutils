@@ -9,6 +9,7 @@ class Console
 public:
     void Init(uint16_t port);
     void Start() const;
+
 private:
     uint16_t port_;
 };

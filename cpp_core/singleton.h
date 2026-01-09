@@ -8,19 +8,19 @@ class Singleton
 {
 public:
     template <typename... Args>
-    static T& GetInstance(Args&&... args)
+    static T &GetInstance(Args &&...args)
     {
         static T instance(std::forward<Args>(args)...);
         return instance;
     }
 
 protected:
-    Singleton() {}
-    virtual ~Singleton() {}
+    Singleton() = default;
+    virtual ~Singleton() = default;
 
 private:
-    Singleton(const Singleton& other) = delete;
-    Singleton& operator=(const Singleton& other) = delete;
+    Singleton(const Singleton &other) = delete;
+    Singleton &operator=(const Singleton &other) = delete;
 };
 
 #endif // SINGLETON_H

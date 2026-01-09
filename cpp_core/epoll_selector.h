@@ -6,9 +6,11 @@ class EpollSelector
 public:
     EpollSelector() = default;
     ~EpollSelector() = default;
+
 public:
     void Init();
-    void Start();
+    void Start(int timeout);
+
 private:
     int epollFd_;
 };

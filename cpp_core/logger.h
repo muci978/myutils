@@ -7,11 +7,12 @@
 
 enum LogLevel
 {
-    MIN_LEVEL = 0,
+    MIN_LEVEL = -1,
     DEBUG = 0,
     INFO = 1,
     WARN = 2,
-    ERROR = 3
+    ERROR = 3,
+    MAX_LEVEL = 4
 };
 
 // TODO：设置日志级别，例如：DEBUG, INFO, WARN, ERROR
@@ -23,36 +24,26 @@ class Logger : public Singleton<Logger>
     friend class Singleton<Logger>;
 
 public:
-    void SetLogLimit(LogLevel limit)
-    {
-        limit_ = limit;
-    }
-
-    LogLevel GetLogLimit() const
-    {
-        return limit_;
-    }
-    
     void Log(LogLevel level, const std::string &msg) const
     {
         std::string levelStr;
         switch (level)
         {
-            case DEBUG:
-                levelStr = "[DEBUG] ";
-                break;
-            case INFO:
-                levelStr = "[INFO] ";
-                break;
-            case WARN:
-                levelStr = "[WARN] ";
-                break;
-            case ERROR:
-                levelStr = "[ERROR] ";
-                break;
-            default:
-                levelStr = "[UNKNOWN] ";
-                break;
+        case DEBUG:
+            levelStr = "[DEBUG] ";
+            break;
+        case INFO:
+            levelStr = "[INFO] ";
+            break;
+        case WARN:
+            levelStr = "[WARN] ";
+            break;
+        case ERROR:
+            levelStr = "[ERROR] ";
+            break;
+        default:
+            levelStr = "[UNKNOWN] ";
+            break;
         }
         if (level > limit_)
         {

@@ -13,7 +13,6 @@ void EpollSelector::Init()
     }
 }
 
-void EpollSelector::Start()
+void EpollSelector::Start(int timeout)
 {
-    
 }
