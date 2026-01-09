@@ -220,17 +220,9 @@ std::string LoggerFactory::GetLogPattern(const LoggerConfig &config)
     return oss.str();
 }
 
-bool Logger::Init()
+void Logger::Init()
 {
     config_.Init();
-    try
-    {
-        logger_ = LoggerFactory::CreateLogger(config_);
-        return true;
-    }
-    catch (const spdlog::spdlog_ex &ex)
-    {
-        std::cerr << "logger initialization failed: " << ex.what() << std::endl;
-        return false;
-    }
+    // 日志系统初始化失败通过异常退出
+    logger_ = LoggerFactory::CreateLogger(config_);
 }

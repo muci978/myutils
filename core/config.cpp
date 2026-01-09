@@ -7,6 +7,7 @@
 void ConfigManager::Init(const std::string &configPath)
 {
     configPath_ = configPath;
+    // 配置文件加载失败通过异常退出
     Load();
 }
 

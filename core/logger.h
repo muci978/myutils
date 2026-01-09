@@ -75,7 +75,7 @@ class Logger : public Singleton<Logger>
     friend class Singleton<Logger>;
 
 public:
-    bool Init();
+    void Init();
 
 private:
     Logger() : logger_(nullptr){}
