@@ -1,2 +1,5 @@
 compile_commands.json
 .cache/
+build/
+bin/
+core/test.cpp

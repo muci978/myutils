@@ -59,6 +59,8 @@ void LoggerConfig::Init()
     asyncThreadSize = configManager.asyncThreadSize;
 }
 
+std::ostringstream LoggerFactory::loggerMode_;
+
 std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig &config)
 {
     std::vector<spdlog::sink_ptr> sinks;
@@ -79,6 +81,8 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig &
 
     // 创建logger
     std::shared_ptr<spdlog::logger> logger;
+    loggerMode_ << "async: " << config.asyncMode << ", ";
+
     if (config.asyncMode)
     {
         logger = CreateAsyncLogger(config.loggerName, sinks, config);
@@ -94,6 +98,8 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig &
     logger->set_pattern(GetLogPattern(config));
     spdlog::flush_every(std::chrono::seconds(5));
 
+    loggerMode_ << "level: " << spdlog::level::to_short_c_str(logger->level());
+
     // 注册到全局注册表
     spdlog::register_logger(logger);
 
@@ -104,10 +110,12 @@ spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig &config)
 {
     if (config.threadMode == ThreadMode::Multi)
     {
+        loggerMode_ << "sink: stdout_color_sink_mt, ";
         return std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     }
     else
     {
+        loggerMode_ << "sink: stdout_color_sink_st, ";
         return std::make_shared<spdlog::sinks::stdout_color_sink_st>();
     }
 }
@@ -135,10 +143,12 @@ spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig &config)
 
     if (config.threadMode == ThreadMode::Multi)
     {
+        loggerMode_ << "sink: basic_file_sink_mt, ";
         return std::make_shared<spdlog::sinks::basic_file_sink_mt>(fullPath, true);
     }
     else
     {
+        loggerMode_ << "sink: basic_file_sink_st, ";
         return std::make_shared<spdlog::sinks::basic_file_sink_st>(fullPath, true);
     }
 }
@@ -148,6 +158,7 @@ spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig &config)
 
     if (config.threadMode == ThreadMode::Multi)
     {
+        loggerMode_ << "sink: rotating_file_sink_mt, ";
         return std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
             fullPath,
             config.logFileSize * 1024 * 1024,
@@ -155,6 +166,7 @@ spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig &config)
     }
     else
     {
+        loggerMode_ << "sink: rotating_file_sink_st, ";
         return std::make_shared<spdlog::sinks::rotating_file_sink_st>(
             fullPath,
             config.logFileSize * 1024 * 1024,
@@ -168,6 +180,7 @@ spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig &config)
 
     if (config.threadMode == ThreadMode::Multi)
     {
+        loggerMode_ << "sink: daily_file_sink_mt, ";
         return std::make_shared<spdlog::sinks::daily_file_sink_mt>(
             fullPath,
             0,     // 0点
@@ -177,6 +190,7 @@ spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig &config)
     }
     else
     {
+        loggerMode_ << "sink: daily_file_sink_st, ";
         return std::make_shared<spdlog::sinks::daily_file_sink_st>(
             fullPath,
             0,     // 0点
@@ -190,6 +204,8 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::stri
 {
     // 初始化线程池（全局）
     spdlog::init_thread_pool(config.asyncQueueSize, config.asyncThreadSize);
+    loggerMode_ << "queSize: " << config.asyncQueueSize << ", ";
+    loggerMode_ << "thdSize: " << config.asyncThreadSize << ", ";
 
     // 创建异步logger
     return std::make_shared<spdlog::async_logger>(
@@ -217,6 +233,8 @@ std::string LoggerFactory::GetLogPattern(const LoggerConfig &config)
         oss << "[tid:%t] ";
     }
     oss << "[%s:%#] %v";
+
+    loggerMode_ << "pattern: " << oss.str() << ", ";
     return oss.str();
 }
 
@@ -225,4 +243,17 @@ void Logger::Init()
     config_.Init();
     // 日志系统初始化失败通过异常退出
     logger_ = LoggerFactory::CreateLogger(config_);
+    info("logger initialized successfully");
+    info(LoggerFactory::GetLoggerMode());
+}
+
+void Logger::Close()
+{
+    if (nullptr != logger_)
+    {
+        logger_->flush();
+        logger_.reset();
+        spdlog::drop_all();
+        spdlog::shutdown();
+    }
 }

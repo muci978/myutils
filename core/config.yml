@@ -53,4 +53,4 @@ process:
 # 线程池相关
 threadpool:
   # 使用线程池
-  useThreadPool: false
+  useThreadPool: true

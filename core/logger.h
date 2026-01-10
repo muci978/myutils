@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <sstream>
 #include "singleton.h"
 #include "spdlog/common.h"
 #include "spdlog/spdlog.h"
@@ -54,10 +55,15 @@ struct LoggerConfig
     std::string loggerName = "AppLogger";
 };
 
+// TODO:console输出
 class LoggerFactory
 {
 public:
     static std::shared_ptr<spdlog::logger> CreateLogger(const LoggerConfig &config);
+    static std::string GetLoggerMode()
+    {
+        return loggerMode_.str();
+    }
 
 private:
     static spdlog::sink_ptr CreateConsoleSink(const LoggerConfig &config);
@@ -68,6 +74,9 @@ private:
     static spdlog::sink_ptr CreateSizeAndDateSink(const LoggerConfig &config);
     static std::shared_ptr<spdlog::logger> CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig &config);
     static std::string GetLogPattern(const LoggerConfig &config);
+
+private:
+    static std::ostringstream loggerMode_;
 };
 
 class Logger : public Singleton<Logger>
@@ -76,16 +85,13 @@ class Logger : public Singleton<Logger>
 
 public:
     void Init();
+    void Close();
 
 private:
-    Logger() : logger_(nullptr){}
+    Logger() : logger_(nullptr) {}
     ~Logger()
     {
-        if (nullptr != logger_)
-        {
-            logger_->flush();
-            spdlog::shutdown();
-        }
+        Close();
     }
 
 public:
@@ -93,7 +99,6 @@ public:
 
 private:
     LoggerConfig config_;
-    
 };
 
 #endif // LOGGER_H
