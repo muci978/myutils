@@ -6,7 +6,6 @@
 #include <string>
 #include <sstream>
 #include "singleton.h"
-#include "spdlog/common.h"
 #include "spdlog/spdlog.h"
 
 // #define trace(...) SPDLOG_LOGGER_CALL(Logger::GetInstance().logger_.get(), spdlog::level::trace, __VA_ARGS__)
@@ -36,44 +35,27 @@ enum class RotationPolicy
     BySizeAndDate
 };
 
-struct LoggerConfig
-{
-    void Init();
-
-    ThreadMode threadMode;
-    OutputTarget outputTarget;
-    RotationPolicy rotationPolicy;
-    std::string logPath;
-    std::string logName;
-    int logFileCount;
-    int logFileSize;
-    spdlog::level::level_enum logLevel;
-    bool asyncMode;
-    int asyncQueueSize;
-    int asyncThreadSize;
-
-    std::string loggerName = "AppLogger";
-};
+struct LoggerConfig;
 
 // TODO:console输出
 class LoggerFactory
 {
 public:
-    static std::shared_ptr<spdlog::logger> CreateLogger(const LoggerConfig &config);
+    static std::shared_ptr<spdlog::logger> CreateLogger(const LoggerConfig *config);
     static std::string GetLoggerMode()
     {
         return loggerMode_.str();
     }
 
 private:
-    static spdlog::sink_ptr CreateConsoleSink(const LoggerConfig &config);
-    static spdlog::sink_ptr CreateFileSink(const LoggerConfig &config);
-    static spdlog::sink_ptr CreateBasicFileSink(const LoggerConfig &config);
-    static spdlog::sink_ptr CreateRotatingSink(const LoggerConfig &config);
-    static spdlog::sink_ptr CreateDailySink(const LoggerConfig &config);
-    static spdlog::sink_ptr CreateSizeAndDateSink(const LoggerConfig &config);
-    static std::shared_ptr<spdlog::logger> CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig &config);
-    static std::string GetLogPattern(const LoggerConfig &config);
+    static spdlog::sink_ptr CreateConsoleSink(const LoggerConfig *config);
+    static spdlog::sink_ptr CreateFileSink(const LoggerConfig *config);
+    static spdlog::sink_ptr CreateBasicFileSink(const LoggerConfig *config);
+    static spdlog::sink_ptr CreateRotatingSink(const LoggerConfig *config);
+    static spdlog::sink_ptr CreateDailySink(const LoggerConfig *config);
+    static spdlog::sink_ptr CreateSizeAndDateSink(const LoggerConfig *config);
+    static std::shared_ptr<spdlog::logger> CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig *config);
+    static std::string GetLogPattern(const LoggerConfig *config);
 
 private:
     static std::ostringstream loggerMode_;
@@ -88,17 +70,14 @@ public:
     void Close();
 
 private:
-    Logger() : logger_(nullptr) {}
-    ~Logger()
-    {
-        Close();
-    }
+    Logger();
+    ~Logger();
 
 public:
     std::shared_ptr<spdlog::logger> logger_;
 
 private:
-    LoggerConfig config_;
+    LoggerConfig *config_;
 };
 
 #endif // LOGGER_H

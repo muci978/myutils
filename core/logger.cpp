@@ -1,30 +1,51 @@
 #include "logger.h"
-#include "config.h"
 #include <sstream>
-#include "spdlog/async_logger.h"
-#include "spdlog/common.h"
 #include <memory>
+#include "config.h"
+#include "configinfo.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/async_logger.h>
+#include <spdlog/common.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/daily_file_sink.h>
 #include <spdlog/async.h>
 
+struct LoggerConfig
+{
+    void Init();
+
+    ThreadMode threadMode;
+    OutputTarget outputTarget;
+    RotationPolicy rotationPolicy;
+    std::string logPath;
+    std::string logName;
+    int logFileCount;
+    int logFileSize;
+    spdlog::level::level_enum logLevel;
+    bool asyncMode;
+    int asyncQueueSize;
+    int asyncThreadSize;
+
+    std::string loggerName = "AppLogger";
+};
+
 void LoggerConfig::Init()
 {
-    auto &configManager = ConfigManager::GetInstance();
+    auto configInfo = ConfigManager::GetInstance().GetInfo();
 
-    threadMode = (configManager.useThreadPool | configManager.useSlave) ? ThreadMode::Multi : ThreadMode::Single;
-    outputTarget = configManager.daemonMode ? OutputTarget::File : OutputTarget::Console;
-    if (!configManager.rotateByDate && 0 == configManager.rotateBySize)
+    threadMode = (configInfo->useThreadPool | configInfo->useSlave) ? ThreadMode::Multi : ThreadMode::Single;
+    outputTarget = configInfo->daemonMode ? OutputTarget::File : OutputTarget::Console;
+    if (!configInfo->rotateByDate && 0 == configInfo->rotateBySize)
     {
         rotationPolicy = RotationPolicy::None;
     }
-    else if (configManager.rotateByDate && 0 == configManager.rotateBySize)
+    else if (configInfo->rotateByDate && 0 == configInfo->rotateBySize)
     {
         rotationPolicy = RotationPolicy::ByDate;
     }
-    else if (!configManager.rotateByDate && configManager.rotateBySize > 0)
+    else if (!configInfo->rotateByDate && configInfo->rotateBySize > 0)
     {
         rotationPolicy = RotationPolicy::BySize;
     }
@@ -32,11 +53,11 @@ void LoggerConfig::Init()
     {
         rotationPolicy = RotationPolicy::BySizeAndDate;
     }
-    logPath = configManager.logPath;
-    logName = configManager.logName;
-    logFileCount = configManager.logFileCount;
-    logFileSize = configManager.rotateBySize;
-    switch (configManager.logLevel)
+    logPath = configInfo->logPath;
+    logName = configInfo->logName;
+    logFileCount = configInfo->logFileCount;
+    logFileSize = configInfo->rotateBySize;
+    switch (configInfo->logLevel)
     {
     case 0:
         logLevel = spdlog::level::level_enum::debug;
@@ -54,19 +75,19 @@ void LoggerConfig::Init()
         logLevel = spdlog::level::level_enum::info;
         break;
     }
-    asyncMode = configManager.asyncMode;
-    asyncQueueSize = configManager.asyncQueueSize;
-    asyncThreadSize = configManager.asyncThreadSize;
+    asyncMode = configInfo->asyncMode;
+    asyncQueueSize = configInfo->asyncQueueSize;
+    asyncThreadSize = configInfo->asyncThreadSize;
 }
 
 std::ostringstream LoggerFactory::loggerMode_;
 
-std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig &config)
+std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig* config)
 {
     std::vector<spdlog::sink_ptr> sinks;
 
     // 根据输出目标选择sink
-    if (config.outputTarget == OutputTarget::Console)
+    if (config->outputTarget == OutputTarget::Console)
     {
         sinks.emplace_back(CreateConsoleSink(config));
     }
@@ -81,19 +102,19 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig &
 
     // 创建logger
     std::shared_ptr<spdlog::logger> logger;
-    loggerMode_ << "async: " << config.asyncMode << ", ";
+    loggerMode_ << "async: " << config->asyncMode << ", ";
 
-    if (config.asyncMode)
+    if (config->asyncMode)
     {
-        logger = CreateAsyncLogger(config.loggerName, sinks, config);
+        logger = CreateAsyncLogger(config->loggerName, sinks, config);
     }
     else
     {
-        logger = std::make_shared<spdlog::logger>(config.loggerName, sinks.begin(), sinks.end());
+        logger = std::make_shared<spdlog::logger>(config->loggerName, sinks.begin(), sinks.end());
     }
 
     // 配置logger
-    logger->set_level(config.logLevel);
+    logger->set_level(config->logLevel);
     logger->flush_on(spdlog::level::level_enum::err);
     logger->set_pattern(GetLogPattern(config));
     spdlog::flush_every(std::chrono::seconds(5));
@@ -106,9 +127,9 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig &
     return logger;
 }
 
-spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig &config)
+spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig* config)
 {
-    if (config.threadMode == ThreadMode::Multi)
+    if (config->threadMode == ThreadMode::Multi)
     {
         loggerMode_ << "sink: stdout_color_sink_mt, ";
         return std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -120,9 +141,9 @@ spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig &config)
     }
 }
 
-spdlog::sink_ptr LoggerFactory::CreateFileSink(const LoggerConfig &config)
+spdlog::sink_ptr LoggerFactory::CreateFileSink(const LoggerConfig* config)
 {
-    switch (config.rotationPolicy)
+    switch (config->rotationPolicy)
     {
     case RotationPolicy::None:
         return CreateBasicFileSink(config);
@@ -137,11 +158,11 @@ spdlog::sink_ptr LoggerFactory::CreateFileSink(const LoggerConfig &config)
     }
 }
 
-spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig &config)
+spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig* config)
 {
-    std::string fullPath = config.logPath + "/" + config.logName;
+    std::string fullPath = config->logPath + "/" + config->logName;
 
-    if (config.threadMode == ThreadMode::Multi)
+    if (config->threadMode == ThreadMode::Multi)
     {
         loggerMode_ << "sink: basic_file_sink_mt, ";
         return std::make_shared<spdlog::sinks::basic_file_sink_mt>(fullPath, true);
@@ -152,33 +173,33 @@ spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig &config)
         return std::make_shared<spdlog::sinks::basic_file_sink_st>(fullPath, true);
     }
 }
-spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig &config)
+spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig* config)
 {
-    std::string fullPath = config.logPath + "/" + config.logName;
+    std::string fullPath = config->logPath + "/" + config->logName;
 
-    if (config.threadMode == ThreadMode::Multi)
+    if (config->threadMode == ThreadMode::Multi)
     {
         loggerMode_ << "sink: rotating_file_sink_mt, ";
         return std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
             fullPath,
-            config.logFileSize * 1024 * 1024,
-            config.logFileCount);
+            config->logFileSize * 1024 * 1024,
+            config->logFileCount);
     }
     else
     {
         loggerMode_ << "sink: rotating_file_sink_st, ";
         return std::make_shared<spdlog::sinks::rotating_file_sink_st>(
             fullPath,
-            config.logFileSize * 1024 * 1024,
-            config.logFileCount);
+            config->logFileSize * 1024 * 1024,
+            config->logFileCount);
     }
 }
 
-spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig &config)
+spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig* config)
 {
-    std::string fullPath = config.logPath + "/" + config.logName;
+    std::string fullPath = config->logPath + "/" + config->logName;
 
-    if (config.threadMode == ThreadMode::Multi)
+    if (config->threadMode == ThreadMode::Multi)
     {
         loggerMode_ << "sink: daily_file_sink_mt, ";
         return std::make_shared<spdlog::sinks::daily_file_sink_mt>(
@@ -186,7 +207,7 @@ spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig &config)
             0,     // 0点
             0,     // 0分
             false, // truncate
-            static_cast<uint16_t>(config.logFileCount));
+            static_cast<uint16_t>(config->logFileCount));
     }
     else
     {
@@ -196,16 +217,16 @@ spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig &config)
             0,     // 0点
             0,     // 0分
             false, // truncate
-            static_cast<uint16_t>(config.logFileCount));
+            static_cast<uint16_t>(config->logFileCount));
     }
 }
 
-std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig &config)
+std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig* config)
 {
     // 初始化线程池（全局）
-    spdlog::init_thread_pool(config.asyncQueueSize, config.asyncThreadSize);
-    loggerMode_ << "queSize: " << config.asyncQueueSize << ", ";
-    loggerMode_ << "thdSize: " << config.asyncThreadSize << ", ";
+    spdlog::init_thread_pool(config->asyncQueueSize, config->asyncThreadSize);
+    loggerMode_ << "queSize: " << config->asyncQueueSize << ", ";
+    loggerMode_ << "thdSize: " << config->asyncThreadSize << ", ";
 
     // 创建异步logger
     return std::make_shared<spdlog::async_logger>(
@@ -216,19 +237,19 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::stri
         spdlog::async_overflow_policy::block);
 }
 
-spdlog::sink_ptr LoggerFactory::CreateSizeAndDateSink(const LoggerConfig &config)
+spdlog::sink_ptr LoggerFactory::CreateSizeAndDateSink(const LoggerConfig* config)
 {
     // 需要创建两个sink同时工作
     // 暂时先默认使用大小轮转
     return CreateRotatingSink(config);
 }
 
-std::string LoggerFactory::GetLogPattern(const LoggerConfig &config)
+std::string LoggerFactory::GetLogPattern(const LoggerConfig* config)
 {
     std::ostringstream oss;
     oss << "[%Y-%m-%d %H:%M:%S] ";
     oss << "[%^%l%$] ";
-    if (config.threadMode == ThreadMode::Multi)
+    if (config->threadMode == ThreadMode::Multi)
     {
         oss << "[tid:%t] ";
     }
@@ -238,9 +259,16 @@ std::string LoggerFactory::GetLogPattern(const LoggerConfig &config)
     return oss.str();
 }
 
+Logger::Logger() : logger_(nullptr), config_(new LoggerConfig) {}
+
+Logger::~Logger()
+{
+    Close();
+}
+
 void Logger::Init()
 {
-    config_.Init();
+    config_->Init();
     // 日志系统初始化失败通过异常退出
     logger_ = LoggerFactory::CreateLogger(config_);
     info("logger initialized successfully");
@@ -255,5 +283,11 @@ void Logger::Close()
         logger_.reset();
         spdlog::drop_all();
         spdlog::shutdown();
+    }
+
+    if (nullptr != config_)
+    {
+        delete config_;
+        config_ = nullptr;
     }
 }

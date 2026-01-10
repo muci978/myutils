@@ -4,7 +4,7 @@ log:
   logPath: "./log"
   # 日志命名
   logName: "cpp_core.log"
-  # DEBUG：0；INFO：1；WARN：2；ERROR：3
+  # DEBUG：0；INFO：1；WARN：2；ERROR：3；DEFAULT：INFO
   logLevel: -1
   # 保存日志数量
   logFileCount: 3
@@ -53,4 +53,4 @@ process:
 # 线程池相关
 threadpool:
   # 使用线程池
-  useThreadPool: true
+  useThreadPool: false
