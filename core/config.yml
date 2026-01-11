@@ -1,7 +1,7 @@
 # 日志相关
 log:
-  # 日志输出目录
-  logPath: "./log"
+  # 日志输出目录, 必须是绝对路径
+  logPath: "/home/muci/myutils/bin/log"
   # 日志命名
   logName: "cpp_core.log"
   # DEBUG：0；INFO：1；WARN：2；ERROR：3；DEFAULT：INFO
@@ -13,7 +13,7 @@ log:
   # 按日期轮转
   rotateByDate: true
   # 异步模式
-  asyncMode: false
+  asyncMode: true
   # 异步队列大小
   asyncQueueSize: 8192
   # 异步线程数
@@ -49,6 +49,10 @@ console:
 process:
   # 开启守护进程模式
   daemonMode: true
+  # coredump软上限(默认约2GB)
+  coreLimitCur: 2000000000
+  # coredump硬上线(默认约2GB)
+  coreLimitMax: 2000000000
 
 # 线程池相关
 threadpool:

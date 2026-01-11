@@ -82,7 +82,7 @@ void LoggerConfig::Init()
 
 std::ostringstream LoggerFactory::loggerMode_;
 
-std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig* config)
+std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig *config)
 {
     std::vector<spdlog::sink_ptr> sinks;
 
@@ -117,7 +117,7 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig* 
     logger->set_level(config->logLevel);
     logger->flush_on(spdlog::level::level_enum::err);
     logger->set_pattern(GetLogPattern(config));
-    spdlog::flush_every(std::chrono::seconds(5));
+    spdlog::flush_every(std::chrono::seconds(1));
 
     loggerMode_ << "level: " << spdlog::level::to_short_c_str(logger->level());
 
@@ -127,7 +127,7 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateLogger(const LoggerConfig* 
     return logger;
 }
 
-spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig* config)
+spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig *config)
 {
     if (config->threadMode == ThreadMode::Multi)
     {
@@ -141,7 +141,7 @@ spdlog::sink_ptr LoggerFactory::CreateConsoleSink(const LoggerConfig* config)
     }
 }
 
-spdlog::sink_ptr LoggerFactory::CreateFileSink(const LoggerConfig* config)
+spdlog::sink_ptr LoggerFactory::CreateFileSink(const LoggerConfig *config)
 {
     switch (config->rotationPolicy)
     {
@@ -158,7 +158,7 @@ spdlog::sink_ptr LoggerFactory::CreateFileSink(const LoggerConfig* config)
     }
 }
 
-spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig* config)
+spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig *config)
 {
     std::string fullPath = config->logPath + "/" + config->logName;
 
@@ -173,7 +173,7 @@ spdlog::sink_ptr LoggerFactory::CreateBasicFileSink(const LoggerConfig* config)
         return std::make_shared<spdlog::sinks::basic_file_sink_st>(fullPath, true);
     }
 }
-spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig* config)
+spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig *config)
 {
     std::string fullPath = config->logPath + "/" + config->logName;
 
@@ -195,7 +195,7 @@ spdlog::sink_ptr LoggerFactory::CreateRotatingSink(const LoggerConfig* config)
     }
 }
 
-spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig* config)
+spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig *config)
 {
     std::string fullPath = config->logPath + "/" + config->logName;
 
@@ -221,7 +221,7 @@ spdlog::sink_ptr LoggerFactory::CreateDailySink(const LoggerConfig* config)
     }
 }
 
-std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig* config)
+std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::string &name, const std::vector<spdlog::sink_ptr> &sinks, const LoggerConfig *config)
 {
     // 初始化线程池（全局）
     spdlog::init_thread_pool(config->asyncQueueSize, config->asyncThreadSize);
@@ -237,14 +237,14 @@ std::shared_ptr<spdlog::logger> LoggerFactory::CreateAsyncLogger(const std::stri
         spdlog::async_overflow_policy::block);
 }
 
-spdlog::sink_ptr LoggerFactory::CreateSizeAndDateSink(const LoggerConfig* config)
+spdlog::sink_ptr LoggerFactory::CreateSizeAndDateSink(const LoggerConfig *config)
 {
     // 需要创建两个sink同时工作
     // 暂时先默认使用大小轮转
     return CreateRotatingSink(config);
 }
 
-std::string LoggerFactory::GetLogPattern(const LoggerConfig* config)
+std::string LoggerFactory::GetLogPattern(const LoggerConfig *config)
 {
     std::ostringstream oss;
     oss << "[%Y-%m-%d %H:%M:%S] ";
@@ -263,19 +263,22 @@ Logger::Logger() : logger_(nullptr), config_(new LoggerConfig) {}
 
 Logger::~Logger()
 {
-    Close();
+    Stop();
 }
 
 void Logger::Init()
 {
     config_->Init();
     // 日志系统初始化失败通过异常退出
-    logger_ = LoggerFactory::CreateLogger(config_);
-    info("logger initialized successfully");
-    info(LoggerFactory::GetLoggerMode());
+    if(nullptr == logger_)
+    {
+        logger_ = LoggerFactory::CreateLogger(config_);
+        info("logger initialized successfully");
+        info(LoggerFactory::GetLoggerMode());
+    }
 }
 
-void Logger::Close()
+void Logger::Stop()
 {
     if (nullptr != logger_)
     {

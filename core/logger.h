@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 #include "singleton.h"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 // #define trace(...) SPDLOG_LOGGER_CALL(Logger::GetInstance().logger_.get(), spdlog::level::trace, __VA_ARGS__)
 #define debug(...) SPDLOG_LOGGER_CALL(Logger::GetInstance().logger_.get(), spdlog::level::debug, __VA_ARGS__)
@@ -67,7 +67,7 @@ class Logger : public Singleton<Logger>
 
 public:
     void Init();
-    void Close();
+    void Stop();
 
 private:
     Logger();

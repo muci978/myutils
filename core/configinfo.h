@@ -32,6 +32,8 @@ struct ConfigInfo
 
     // 进程相关
     bool daemonMode;
+    int coreLimitCur;
+    int coreLimitMax;
 
     // 线程池相关
     bool useThreadPool;

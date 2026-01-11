@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-void Daemon();
-void SetNonBlock();
+int SetNonBlock(int fd);
 
 #endif // UTILS_H

@@ -16,7 +16,7 @@ class ConfigManager : public Singleton<ConfigManager>
 public:
     void Init(const std::string &configPath);
     void dumpConfig(std::ostream &os) const;
-    const ConfigInfo * const GetInfo() const
+    const ConfigInfo *const GetInfo() const
     {
         return info_;
     }
@@ -25,7 +25,7 @@ private:
     ConfigManager();
     ~ConfigManager();
 
-    void Load();
+    void Load() const;
 
 private:
     ConfigInfo *info_;
