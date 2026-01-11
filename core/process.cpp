@@ -140,11 +140,16 @@ bool ProcessManager::InitSignal() const
         sigaction(sig, &act, nullptr);
         // 等待1秒确保日志刷新完成
         sleep(1);
-        raise(SIGSEGV);
+        raise(sig);
     };
     if (0 > sigaction(SIGSEGV, &act, nullptr))
     {
         error("set SIGSEGV handler failed, err: {}", strerror(errno));
+        return false;
+    }
+    if (0 > sigaction(SIGABRT, &act, nullptr))
+    {
+        error("set SIGABRT handler failed, err: {}", strerror(errno));
         return false;
     }
 
