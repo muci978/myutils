@@ -17,6 +17,7 @@ private:
         prepareExit_ = true;
     }
 
+    bool InitDaemon() const;
     bool InitSignal() const;
     bool InitCoreDump() const;
     // TODO：文件描述符个数限制？
@@ -25,9 +26,6 @@ private:
     // TODO：设置进程title？
 
 public:
-    // 开启daemon返回true，否则返回false
-    // 创建守护进程需要fork子进程，会导致spdlog异步模式下锁不可用，所以单独进行调用
-    bool InitDaemon() const;
 
     virtual bool Init() override;
     virtual bool Start() override;

@@ -191,23 +191,16 @@ bool ProcessManager::InitCoreDump() const
 
 bool ProcessManager::Init()
 {
-    info("process manager init");
-
-    if (InitSignal())
-    {
-        info("init sig handlers successful");
-    }
-    else
+    bool ret = InitDaemon();
+    Logger::GetInstance().Init();
+    info("daemon mode: {}", ret);
+    
+    if (!InitSignal())
     {
         error("init sig handlers failed");
         return false;
     }
-
-    if (InitCoreDump())
-    {
-        info("init coredump file size successful");
-    }
-    else
+    if (!InitCoreDump())
     {
         error("init coredump file size failed");
         return false;

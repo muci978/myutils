@@ -1,13 +1,19 @@
 #include "config.h"
 #include "configinfo.h"
-#include <iostream>
-#include <iomanip>
-#include <ostream>
+#include <fstream>
 #include <stdexcept>
 #include <yaml-cpp/yaml.h>
 
 void ConfigInfo::Load(const std::string &configPath)
 {
+    auto ifs = std::ifstream(configPath);
+    if(ifs.is_open() == false)
+    {
+        throw std::runtime_error("failed to open the configuration file");
+    }
+    configFile_ << ifs.rdbuf();
+    ifs.close();
+
     YAML::Node root = YAML::LoadFile(configPath);
 
     if (root["log"])
@@ -80,51 +86,16 @@ void ConfigInfo::Load(const std::string &configPath)
 
 void ConfigInfo::dumpConfig(std::ostream &os) const
 {
-    os << std::boolalpha << std::left;
-
-    os << "[log]" << '\n'
-       << std::setw(20) << "logPath: " << logPath << '\n'
-       << std::setw(20) << "logName: " << logName << '\n'
-       << std::setw(20) << "logLevel: " << logLevel << '\n'
-       << std::setw(20) << "logFileCount: " << logFileCount << '\n'
-       << std::setw(20) << "rotateBySize: " << rotateBySize << '\n'
-       << std::setw(20) << "rotateByDate: " << rotateByDate << '\n'
-       << std::setw(20) << "asyncMode: " << asyncMode << '\n'
-       << std::setw(20) << "asyncQueueSize: " << asyncQueueSize << '\n'
-       << std::setw(20) << "asyncThreadSize: " << asyncThreadSize << '\n';
-    os << '\n';
-
-    os << "[reactor]" << '\n'
-       << std::setw(20) << "masterMaxEvent: " << masterMaxEvent << '\n'
-       << std::setw(20) << "masterTimeout: " << masterTimeout << '\n'
-       << std::setw(20) << "slaveMaxEvnet: " << slaveMaxEvent << '\n'
-       << std::setw(20) << "slaveTimeout: " << slaveTimeout << '\n'
-       << std::setw(20) << "useSlave: " << useSlave << '\n';
-    os << '\n';
-
-    os << "[console]" << '\n'
-       << std::setw(20) << "consoleListenIp: " << consoleListenIp << '\n'
-       << std::setw(20) << "consoleListenPort: " << consoleListenPort << '\n'
-       << std::setw(20) << "consoleTimeout: " << consoleTimeout << '\n'
-       << std::setw(20) << "consoleMaxCount: " << consoleMaxCount << '\n'
-       << std::setw(20) << "useConsole: " << useConsole << '\n';
-    os << '\n';
-
-    os << "[process]" << '\n'
-       << std::setw(20) << "daemonMode: " << daemonMode << '\n'
-       << std::setw(20) << "coreLimitCur: " << coreLimitCur << '\n'
-       << std::setw(20) << "coreLimitMax: " << coreLimitMax << '\n';
-
-    os << '\n';
-
-    os << "[threadpool]" << '\n'
-       << std::setw(20) << "usethreadpool: " << useThreadPool << '\n';
-    os << '\n';
-
-    os << std::noboolalpha << std::setw(0) << std::right;
+    os << configFile_.str();
 }
 
-ConfigManager::ConfigManager() : info_(new ConfigInfo)
+std::string ConfigInfo::GetConfig() const
+{
+    return configFile_.str();
+}
+
+ConfigManager::ConfigManager()
+    : info_(new ConfigInfo)
 {
 }
 
@@ -142,6 +113,7 @@ void ConfigManager::Init(const std::string &configPath)
     configPath_ = configPath;
     // 配置文件加载失败通过异常退出
     Load();
+    DumpConfig(std::cout);
 }
 
 void ConfigManager::Load() const
@@ -149,7 +121,12 @@ void ConfigManager::Load() const
     info_->Load(configPath_);
 }
 
-void ConfigManager::dumpConfig(std::ostream &os) const
+void ConfigManager::DumpConfig(std::ostream &os) const
 {
     info_->dumpConfig(os);
+}
+
+std::string ConfigManager::GetConfig() const
+{
+    return info_->GetConfig();
 }

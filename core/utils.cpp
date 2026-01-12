@@ -17,11 +17,42 @@ int SetNonBlock(int fd)
         error("fcntl failed, err: {}", strerror(errno));
         return -1;
     }
-    
+
     if (0 > fcntl(fd, F_SETFL, oldFlag | O_NONBLOCK))
     {
         error("fcntl failed, err: {}", strerror(errno));
         return -1;
     }
     return oldFlag;
+}
+
+std::string LTrim(const std::string &str)
+{
+    auto pos = str.find_first_not_of(" \t\n");
+    if (pos == std::string::npos)
+    {
+        return "";
+    }
+    else
+    {
+        return str.substr(pos);
+    }
+}
+
+std::string RTrim(const std::string &str)
+{
+    auto pos = str.find_last_not_of(" \t\n");
+    if (pos == std::string::npos)
+    {
+        return "";
+    }
+    else
+    {
+        return str.substr(0, pos + 1);
+    }
+}
+
+std::string Trim(const std::string &str)
+{
+    return LTrim(RTrim(str));
 }

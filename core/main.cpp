@@ -1,52 +1,41 @@
-#include <memory>
 #include "config.h"
 #include "logger.h"
-#include "process.h"
+#include "controller.h"
 
 const std::string configPath = "config.yml";
 
-auto &config = ConfigManager::GetInstance();
-auto &logger = Logger::GetInstance();
-auto &process = ProcessManager::GetInstance();
+#include "manager.h"
+class Test : public Manager
+{
+public:
+    virtual bool Init() override
+    {
+        info("test init");
+        return true;
+    }
+    virtual bool Start() override
+    {
+        info("test start");
+        return true;
+    }
+    virtual bool Stop() override
+    {
+        info("test stop");
+        return true;
+    }
+};
 
 int main()
 {
-    bool ret;
-    std::unique_ptr<int, void (*)(int *)> deleter(new int, [](int *)
-                                                  {
-        info("main exit");
-        logger.Stop();
-        process.Stop(); });
+    auto &controller = Controller::GetInstance();
+    auto pTest = new Test;
+    controller.AddManager("TESTMANAGER", pTest);
 
-    config.Init(configPath);
-
-    ret = process.InitDaemon();
-    logger.Init();
-
-    if (ret)
-    {
-        info("the process runs as a daemon");
-    }
-
-    if (!process.Init())
+    if (!controller.Start(configPath))
     {
         return -1;
     }
-
-    if (!process.Start())
-    {
-        return -1;
-    }
-
-    int *trigger = nullptr;
-    *trigger = 100;
-
-    config.dumpConfig(std::cout);
-    for (;;)
-    {
-        if (process.IsPrepareExit())
-        {
-            return 0;
-        }
-    }
+    controller.Stop();
+    delete pTest;
+    return 0;
 }

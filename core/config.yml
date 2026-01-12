@@ -1,7 +1,7 @@
 # 日志相关
 log:
   # 日志输出目录, 必须是绝对路径
-  logPath: "/home/muci/myutils/bin/log"
+  logPath: "/root/myutils/bin/log"
   # 日志命名
   logName: "cpp_core.log"
   # DEBUG：0；INFO：1；WARN：2；ERROR：3；DEFAULT：INFO

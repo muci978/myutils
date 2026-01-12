@@ -259,7 +259,9 @@ std::string LoggerFactory::GetLogPattern(const LoggerConfig *config)
     return oss.str();
 }
 
-Logger::Logger() : logger_(nullptr), config_(new LoggerConfig) {}
+Logger::Logger()
+    : logger_(nullptr),
+      config_(new LoggerConfig) {}
 
 Logger::~Logger()
 {
@@ -270,7 +272,7 @@ void Logger::Init()
 {
     config_->Init();
     // 日志系统初始化失败通过异常退出
-    if(nullptr == logger_)
+    if (nullptr == logger_)
     {
         logger_ = LoggerFactory::CreateLogger(config_);
         info("logger initialized successfully");

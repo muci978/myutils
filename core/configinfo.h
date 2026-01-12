@@ -1,6 +1,7 @@
 #ifndef CONFIGINFO_H
 #define CONFIGINFO_H
 
+#include <sstream>
 #include <string>
 
 struct ConfigInfo
@@ -38,8 +39,10 @@ struct ConfigInfo
     // 线程池相关
     bool useThreadPool;
 
+    std::ostringstream configFile_;
     void Load(const std::string &configPath);
     void dumpConfig(std::ostream &os) const;
+    std::string GetConfig() const;
 };
 
 #endif // CONFIGINFO_H
