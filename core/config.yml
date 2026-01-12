@@ -48,7 +48,7 @@ console:
 # 进程相关
 process:
   # 开启守护进程模式
-  daemonMode: true
+  daemonMode: false
   # coredump软上限(默认约2GB)
   coreLimitCur: 2000000000
   # coredump硬上线(默认约2GB)

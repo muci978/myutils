@@ -14,7 +14,15 @@ enum class SocketType
 class SocketBase
 {
 public:
-    SocketBase() : type_(SocketType::UNKNOWN), socket_(-1), localIp_(0), peerIp_(0), localPort_(0), peerPort_(0), ipv6Flag_(false), enable_(false) {}
+    SocketBase()
+        : type_(SocketType::UNKNOWN),
+          socket_(-1),
+          localIp_(0),
+          peerIp_(0),
+          localPort_(0),
+          peerPort_(0),
+          ipv6Flag_(false),
+          enable_(false) {}
     virtual ~SocketBase() = default;
 
     virtual void OnConnect() = 0;
@@ -39,6 +47,4 @@ public:
     bool enable_;
 };
 
-
 #endif // SOCKETBASE_H
-

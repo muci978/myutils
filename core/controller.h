@@ -26,7 +26,7 @@ public:
 
 private:
     Controller();
-    ~Controller() = default;
+    ~Controller();
 
 private:
     ManagerQueue systemManagers_;

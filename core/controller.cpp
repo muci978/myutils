@@ -11,6 +11,12 @@ Controller::Controller()
       logger_(Logger::GetInstance()),
       selector_(new EpollSelector) {}
 
+Controller::~Controller()
+{
+    delete selector_;
+    selector_ = nullptr;
+}
+
 bool Controller::Start(const std::string &configPath)
 {
     config_.Init(configPath);

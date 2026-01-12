@@ -30,13 +30,13 @@ bool EpollSelector::Init()
 
 bool EpollSelector::Start()
 {
-    for (;;)
-    {
-        if(ProcessManager::GetInstance().IsPrepareExit())
-        {
-            break;
-        }
-    }
+    // for (;;)
+    // {
+    //     if(ProcessManager::GetInstance().IsPrepareExit())
+    //     {
+    //         break;
+    //     }
+    // }
     return true;
 }
 
