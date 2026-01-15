@@ -37,11 +37,9 @@ void ConfigInfo::Load(const std::string &configPath)
     if (root["reactor"])
     {
         YAML::Node reactorNode = root["reactor"];
-        masterMaxEvent = reactorNode["masterMaxEvent"].as<int>();
-        masterTimeout = reactorNode["masterTimeout"].as<int>();
-        slaveMaxEvent = reactorNode["slaveMaxEvent"].as<int>();
-        slaveTimeout = reactorNode["slaveTimeout"].as<int>();
-        useSlave = reactorNode["useSlave"].as<bool>();
+        reactorCount = reactorNode["reactorCount"].as<int>();
+        reactorMaxEvent = reactorNode["reactorMaxEvent"].as<int>();
+        reactorTimeout = reactorNode["reactorTimeout"].as<int>();
     }
     else
     {
@@ -71,16 +69,6 @@ void ConfigInfo::Load(const std::string &configPath)
     else
     {
         throw std::runtime_error("the configuration file is missing the 'process' node");
-    }
-
-    if (root["threadpool"])
-    {
-        YAML::Node threadNode = root["threadpool"];
-        useThreadPool = threadNode["useThreadPool"].as<bool>();
-    }
-    else
-    {
-        throw std::runtime_error("the configuration file is missing the 'threadpool' node");
     }
 }
 

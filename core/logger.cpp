@@ -35,7 +35,9 @@ void LoggerConfig::Init()
 {
     auto configInfo = ConfigManager::GetInstance().GetInfo();
 
-    threadMode = (configInfo->useThreadPool | configInfo->useSlave) ? ThreadMode::Multi : ThreadMode::Single;
+    // 考虑用户可能使用多线程，这里暂时设置为多线程模式，后续可以考虑根据实际情况调整
+    threadMode = ThreadMode::Multi;
+
     outputTarget = configInfo->daemonMode ? OutputTarget::File : OutputTarget::Console;
     if (!configInfo->rotateByDate && 0 == configInfo->rotateBySize)
     {

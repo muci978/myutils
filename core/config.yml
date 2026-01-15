@@ -9,7 +9,7 @@ log:
   # 保存日志数量
   logFileCount: 3
   # 按大小轮转(MB)
-  rotateBySize: 5
+  rotateBySize: 0
   # 按日期轮转
   rotateByDate: true
   # 异步模式
@@ -21,16 +21,12 @@ log:
 
 # reactor相关
 reactor:
-  # 主reactor最大事件数量
-  masterMaxEvent: 10
-  # 主reactor超时时间(ms)
-  masterTimeout: -1
-  # 从reactor最大事件数量
-  slaveMaxEvent: 10
-  # 从reactor超时时间(ms)
-  slaveTimeout: -1
-  # 主从reactor
-  useSlave: false
+  # reactor数量
+  reactorCount: 1
+  # reactor最大事件数量
+  reactorMaxEvent: 10
+  # reactor超时时间(ms)
+  reactorTimeout: -1
 
 # 控制台相关
 console:
@@ -48,13 +44,9 @@ console:
 # 进程相关
 process:
   # 开启守护进程模式
-  daemonMode: false
+  daemonMode: true
   # coredump软上限(默认约2GB)
   coreLimitCur: 2000000000
   # coredump硬上线(默认约2GB)
   coreLimitMax: 2000000000
 
-# 线程池相关
-threadpool:
-  # 使用线程池
-  useThreadPool: false

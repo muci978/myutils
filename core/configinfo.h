@@ -18,11 +18,9 @@ struct ConfigInfo
     int asyncThreadSize;
 
     // reactor相关
-    int masterMaxEvent;
-    int masterTimeout;
-    int slaveMaxEvent;
-    int slaveTimeout;
-    bool useSlave;
+    int reactorCount;
+    int reactorMaxEvent;
+    int reactorTimeout;
 
     // 控制台相关
     std::string consoleListenIp;
@@ -35,9 +33,6 @@ struct ConfigInfo
     bool daemonMode;
     int coreLimitCur;
     int coreLimitMax;
-
-    // 线程池相关
-    bool useThreadPool;
 
     std::ostringstream configFile_;
     void Load(const std::string &configPath);
