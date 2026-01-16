@@ -1,10 +1,10 @@
 #include "config.h"
-#include "configinfo.h"
+#include "config_pimpl.h"
 #include <fstream>
 #include <stdexcept>
 #include <yaml-cpp/yaml.h>
 
-void ConfigInfo::Load(const std::string &configPath)
+void ConfigPimpl::Load(const std::string &configPath)
 {
     auto ifs = std::ifstream(configPath);
     if(ifs.is_open() == false)
@@ -72,18 +72,18 @@ void ConfigInfo::Load(const std::string &configPath)
     }
 }
 
-void ConfigInfo::dumpConfig(std::ostream &os) const
+void ConfigPimpl::dumpConfig(std::ostream &os) const
 {
     os << configFile_.str();
 }
 
-std::string ConfigInfo::GetConfig() const
+std::string ConfigPimpl::GetConfig() const
 {
     return configFile_.str();
 }
 
 ConfigManager::ConfigManager()
-    : info_(new ConfigInfo)
+    : info_(new ConfigPimpl)
 {
 }
 
@@ -98,15 +98,14 @@ ConfigManager::~ConfigManager()
 
 void ConfigManager::Init(const std::string &configPath)
 {
-    configPath_ = configPath;
     // 配置文件加载失败通过异常退出
-    Load();
+    Load(configPath);
     DumpConfig(std::cout);
 }
 
-void ConfigManager::Load() const
+void ConfigManager::Load(const std::string& configPath) const
 {
-    info_->Load(configPath_);
+    info_->Load(configPath);
 }
 
 void ConfigManager::DumpConfig(std::ostream &os) const

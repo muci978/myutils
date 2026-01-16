@@ -1,10 +1,10 @@
-#ifndef CONFIGINFO_H
-#define CONFIGINFO_H
+#ifndef CONFIG_PIMPL_H
+#define CONFIG_PIMPL_H
 
 #include <sstream>
 #include <string>
 
-struct ConfigInfo
+struct ConfigPimpl
 {
     // 日志相关
     std::string logPath;
@@ -34,10 +34,12 @@ struct ConfigInfo
     int coreLimitCur;
     int coreLimitMax;
 
-    std::ostringstream configFile_;
+    void Init();
     void Load(const std::string &configPath);
     void dumpConfig(std::ostream &os) const;
     std::string GetConfig() const;
+
+    std::ostringstream configFile_;
 };
 
 #endif // CONFIGINFO_H

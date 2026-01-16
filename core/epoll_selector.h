@@ -3,7 +3,7 @@
 
 #include "manager.h"
 
-class ConfigInfo;
+class ConfigPimpl;
 
 class EpollSelector : public Manager
 {
@@ -18,7 +18,7 @@ public:
 
 private:
     int epollFd_;
-    ConfigInfo* configInfo_;
+    ConfigPimpl* configInfo_;
 };
 
 #endif // EPOLL_SELECTOR_H

@@ -2,7 +2,7 @@
 #include <sstream>
 #include <memory>
 #include "config.h"
-#include "configinfo.h"
+#include "config_pimpl.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/async_logger.h>
 #include <spdlog/common.h>

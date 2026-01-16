@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include "logger.h"
 #include "config.h"
-#include "configinfo.h"
+#include "config_pimpl.h"
 
 bool ProcessManager::prepareExit_ = false;
 
