@@ -43,28 +43,36 @@ bool ThreadPool::Start()
                     break;
                 }
 
-                std::packaged_task<void()> task;
+                TaskWithExit task;
                 {
                     std::unique_lock<std::mutex> lock(this->taskMutex_);
-                    while (this->tasks_.empty())
+                    // 这里持有statusMutex_的读锁，有无影响？
+                    taskCond_.wait(lock, [this]()
+                                   {
+                                       // 唤醒条件：有任务 或 线程池停止
+                                       return !this->tasks_.empty() || !this->isRunning_;
+                                   });
+
+                    // 唤醒后直接判断是否停止
+                    if (!this->isRunning_)
                     {
-                        this->taskCond_.wait(lock);
-                        if (!this->isRunning_)
-                        {
-                            info("thread {} is stopped", threadName);
-                            return;
-                        }
+                        info("thread {} is stopped", threadName);
+                        return;
                     }
                     task = std::move(this->tasks_.front());
                     this->tasks_.pop();
                 }
                 try
                 {
-                    task();
+                    task.first();
                 }
                 catch (const std::exception &e)
                 {
                     error("task {} throws exception: {}", threadName, e.what());
+                }
+                catch (...)
+                {
+                    error("task {} throws unknown exception", threadName);
                 }
             }
 
@@ -93,6 +101,7 @@ bool ThreadPool::Stop(bool wait)
             isPreparingToStop_ = true;
         }
         // 只读操作，不需要加锁
+        // TODO：优化成条件变量
         while (!tasks_.empty())
         {
             // 等待任务消耗完毕
@@ -124,7 +133,11 @@ bool ThreadPool::Stop(bool wait)
 
     if (!wait)
     {
-        
+        while (!tasks_.empty())
+        {
+            tasks_.front().second();
+            tasks_.pop();
+        }
     }
 
     info("thread pool {} is stopped", name_);

@@ -16,7 +16,8 @@
 // TODO:优化原子变量内存序
 class ThreadPool
 {
-    using Task = std::packaged_task<void()>;
+    using Task = std::function<void()>;
+    using TaskWithExit = std::pair<Task, Task>;
 
 public:
     explicit ThreadPool(const std::string &name, std::size_t maxTaskNum = 0, std::size_t threadNum = std::thread::hardware_concurrency())
@@ -34,8 +35,9 @@ public:
     {
         using RetType = decltype(func(args...));
 
-        auto pRealTask = std::make_shared<std::packaged_task<RetType()>>(std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
-        auto ret = pRealTask->get_future();
+        auto pRealTask = std::make_shared<std::function<RetType>>(std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
+        auto pTaskPromise = std::make_shared<std::promise<RetType>>();
+        auto ret = pTaskPromise->get_future();
         {
             std::shared_lock<std::shared_mutex> statusLock(statusMutex_);
             if (!isRunning_)
@@ -61,8 +63,12 @@ public:
                     return promise.get_future();
                 }
 
-                tasks_.emplace([pRealTask]
-                               { (*pRealTask)(); });
+                tasks_.emplace([pRealTask, pTaskPromise]
+                               { pTaskPromise->set_value((*pRealTask)()); },
+                               [this, pTaskPromise]
+                               {
+                                   pTaskPromise->set_exception(std::make_exception_ptr(std::runtime_error(this->name_ + " is not running")));
+                               });
             }
         }
 
@@ -79,7 +85,7 @@ private:
 private:
     std::mutex taskMutex_;
     std::condition_variable taskCond_;
-    std::queue<Task> tasks_;
+    std::queue<TaskWithExit> tasks_;
     std::vector<std::thread> threads_;
     std::size_t maxTaskNum_; // 0: 无限制，>0: 限制最大任务数
     std::size_t threadNum_;
