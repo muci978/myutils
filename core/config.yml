@@ -1,7 +1,7 @@
 # 日志相关
 log:
   # 日志输出目录, 必须是绝对路径
-  logPath: "/root/myutils/bin/log"
+  logPath: "/home/muci/myutils/bin/log"
   # 日志命名
   logName: "cpp_core.log"
   # DEBUG：0；INFO：1；WARN：2；ERROR：3；DEFAULT：INFO
@@ -44,9 +44,9 @@ console:
 # 进程相关
 process:
   # 开启守护进程模式
-  daemonMode: true
+  daemonMode: false
   # coredump软上限(默认约2GB)
   coreLimitCur: 2000000000
-  # coredump硬上线(默认约2GB)
+  # coredump硬上限(默认约2GB)
   coreLimitMax: 2000000000
 

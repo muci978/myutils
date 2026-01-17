@@ -1,30 +1,24 @@
 #include "threadpool.h"
 
 #include "logger.h"
-#include <future>
+#include <atomic>
 
 ThreadPool::~ThreadPool()
 {
-    if (isRunning_)
+    if (status_.load(std::memory_order_acquire) == Status::Running)
     {
-        Stop();
+        Stop(false);
     }
 }
 
 bool ThreadPool::Start()
 {
+    // 此时没有worker线程，不需要锁，但是需要防御多个线程同时调用Start
+    Status expected = Status::Stopped;
+    if (!status_.compare_exchange_strong(expected, Status::Running, std::memory_order_acq_rel, std::memory_order_relaxed))
     {
-        std::shared_lock<std::shared_mutex> lock(statusMutex_);
-        if (isRunning_)
-        {
-            warn("thread pool {} is already running", name_);
-            return false;
-        }
-    }
-
-    {
-        std::unique_lock<std::shared_mutex> lock(statusMutex_);
-        isRunning_ = true;
+        warn("thread pool {} is already running", name_);
+        return false;
     }
 
     for (std::size_t i = 0; i < threadNum_; ++i)
@@ -36,29 +30,26 @@ bool ThreadPool::Start()
 
             for (;;)
             {
-
-                std::shared_lock<std::shared_mutex> statusLock(this->statusMutex_);
-                if (!this->isRunning_)
-                {
-                    break;
-                }
-
-                TaskWithExit task;
+                TaskWithAbandon task;
                 {
                     std::unique_lock<std::mutex> lock(this->taskMutex_);
-                    // 这里持有statusMutex_的读锁，有无影响？
-                    taskCond_.wait(lock, [this]()
-                                   {
-                                       // 唤醒条件：有任务 或 线程池停止
-                                       return !this->tasks_.empty() || !this->isRunning_;
-                                   });
+                    this->taskCond_.wait(lock, [this]()
+                                         {
+                                             Status currentStatus = this->status_.load(std::memory_order_acquire);
+                                             return (currentStatus == Status::Running && !this->tasks_.empty()) || (currentStatus != Status::Running); });
 
                     // 唤醒后直接判断是否停止
-                    if (!this->isRunning_)
+                    if (this->status_.load(std::memory_order_acquire) == Status::Stopped)
                     {
-                        info("thread {} is stopped", threadName);
-                        return;
+                        break;
                     }
+                    if (this->status_.load(std::memory_order_relaxed) == Status::Stopping && this->tasks_.empty())
+                    {
+                        this->taskEmptyCond_.notify_all();
+                        this->status_.store(Status::Stopped, std::memory_order_release);
+                        break;
+                    }
+
                     task = std::move(this->tasks_.front());
                     this->tasks_.pop();
                 }
@@ -68,11 +59,11 @@ bool ThreadPool::Start()
                 }
                 catch (const std::exception &e)
                 {
-                    error("task {} throws exception: {}", threadName, e.what());
+                    error("{} throws exception: {}", threadName, e.what());
                 }
                 catch (...)
                 {
-                    error("task {} throws unknown exception", threadName);
+                    error("{} throws unknown exception", threadName);
                 }
             }
 
@@ -86,43 +77,23 @@ bool ThreadPool::Start()
     return true;
 }
 
-bool ThreadPool::Stop(bool wait)
+bool ThreadPool::Stop(bool graceful)
 {
-    if (!isRunning_)
+    // 通过原子操作改变状态，防止多个线程同时调用Stop
+    Status expected = Status::Running;
+    if (!status_.compare_exchange_strong(expected, graceful ? Status::Stopping : Status::Stopped, std::memory_order_acq_rel, std::memory_order_relaxed))
     {
         warn("thread pool {} is not running", name_);
         return false;
     }
 
-    if (wait)
     {
-        {
-            std::unique_lock<std::shared_mutex> statusLock(statusMutex_);
-            isPreparingToStop_ = true;
-        }
-        // 只读操作，不需要加锁
-        // TODO：优化成条件变量
-        while (!tasks_.empty())
-        {
-            // 等待任务消耗完毕
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-
-        {
-            std::unique_lock<std::shared_mutex> statusLock(statusMutex_);
-            isRunning_ = false;
-        }
-    }
-    else
-    {
-        {
-            std::unique_lock<std::shared_mutex> statusLock(statusMutex_);
-            isPreparingToStop_ = true;
-            isRunning_ = false;
-        }
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        taskCond_.notify_all();
+        taskEmptyCond_.wait(lock, [this]()
+                            { return this->status_.load(std::memory_order_acquire) == Status::Stopped || this->tasks_.empty(); });
     }
 
-    taskCond_.notify_all();
     for (auto &thread : threads_)
     {
         if (thread.joinable())
@@ -131,8 +102,9 @@ bool ThreadPool::Stop(bool wait)
         }
     }
 
-    if (!wait)
+    if (!graceful)
     {
+        info("thread pool {} abandon all tasks, {} tasks left", name_, tasks_.size());
         while (!tasks_.empty())
         {
             tasks_.front().second();

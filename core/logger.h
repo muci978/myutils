@@ -70,7 +70,7 @@ public:
     void Stop();
 
 private:
-    Logger();
+    explicit Logger();
     ~Logger();
 
 public:

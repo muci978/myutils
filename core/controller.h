@@ -25,7 +25,7 @@ public:
     bool Stop() const;
 
 private:
-    Controller();
+    explicit Controller();
     ~Controller();
 
 private:

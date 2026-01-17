@@ -23,7 +23,7 @@ public:
     }
 
 private:
-    ConfigManager();
+    explicit ConfigManager();
     ~ConfigManager();
 
     void Load(const std::string& configPath) const;

@@ -9,7 +9,7 @@ class ProcessManager : public Singleton<ProcessManager>, public Manager
     friend class Singleton<ProcessManager>;
 
 private:
-    ProcessManager();
+    explicit ProcessManager();
     ~ProcessManager() = default;
 
     static void ExitHandler(int sig)

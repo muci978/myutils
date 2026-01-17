@@ -8,7 +8,7 @@ class ConfigPimpl;
 class EpollSelector : public Manager
 {
 public:
-    EpollSelector();
+    explicit EpollSelector();
     ~EpollSelector();
 
 public:
