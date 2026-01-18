@@ -60,10 +60,12 @@ bool ThreadPool::Start()
                 catch (const std::exception &e)
                 {
                     error("{} throws exception: {}", threadName, e.what());
+                    task.second();
                 }
                 catch (...)
                 {
                     error("{} throws unknown exception", threadName);
+                    task.second();
                 }
             }
 

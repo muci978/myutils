@@ -69,7 +69,7 @@ public:
                                { this->DoAndSetPromise(*pRealTask, *pTaskPromise); },
                                [this, pTaskPromise]
                                {
-                                   pTaskPromise->set_exception(std::make_exception_ptr(std::runtime_error(this->name_ + " is stopped")));
+                                   pTaskPromise->set_exception(std::make_exception_ptr(std::runtime_error(std::string("task is abandoned, or task throws exception, threadpool name: ") + name_)));
                                });
             }
         }
