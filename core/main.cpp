@@ -210,46 +210,47 @@ void case11()
     tp.Start();
     auto f = std::thread([&]
                          {
-                   std::this_thread::sleep_until(now);
-                   std::vector<std::future<int>> results;
-                   for (int i = 0; i < 10; ++i)
-    {
-        results.emplace_back(tp.AddTask(TestTask, -i, -i));
-        for (auto &result : results)
-        {
-            try
-            {
-                info("result: {}", result.get());
-            }
-            catch (std::exception &e)
-            {
-                warn("result: {}", e.what());
-            }
-            catch (...)
-            {
-                warn("result: unknown error");
-            }
-        }
-    } });
+                             std::this_thread::sleep_until(now);
+                             std::vector<std::future<int>> results;
+                             for (int i = 0; i < 10; ++i)
+                             {
+                                 results.emplace_back(tp.AddTask(TestTask, -i, -i));
+                             }
+                             for (auto &result : results)
+                             {
+                                 try
+                                 {
+                                     info("result: {}", result.get());
+                                 }
+                                 catch (std::exception &e)
+                                 {
+                                     warn("result: {}", e.what());
+                                 }
+                                 catch (...)
+                                 {
+                                     warn("result: unknown error");
+                                 }
+                             }
+                         });
     std::this_thread::sleep_until(now);
     std::vector<std::future<int>> results2;
     for (int i = 0; i < 10; ++i)
     {
         results2.emplace_back(tp.AddTask(TestTask, i, i));
-        for (auto &result : results2)
+    }
+    for (auto &result : results2)
+    {
+        try
         {
-            try
-            {
-                info("result: {}", result.get());
-            }
-            catch (std::exception &e)
-            {
-                warn("result: {}", e.what());
-            }
-            catch (...)
-            {
-                warn("result: unknown error");
-            }
+            info("result: {}", result.get());
+        }
+        catch (std::exception &e)
+        {
+            warn("result: {}", e.what());
+        }
+        catch (...)
+        {
+            warn("result: unknown error");
         }
     }
     f.join();
