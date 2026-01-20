@@ -26,7 +26,7 @@ class EpollSelector
     using EventCallback = std::function<void(EpollSelector *, SocketBase *)>;
 
 public:
-    EpollSelector(EventCallback r, EventCallback w, EventCallback e, int maxEvents = EpollMaxEvents, int timeout = EpollTimeout);
+    explicit EpollSelector(EventCallback r, EventCallback w, EventCallback e, int maxEvents = EpollMaxEvents, int timeout = EpollTimeout);
     ~EpollSelector();
 
     bool AddEvent(SocketBase *s, int event);
@@ -37,8 +37,8 @@ public:
 
 private:
     int epollFd_;
-    int timeout_;
-    int maxEvents_;
+    const int timeout_;
+    const int maxEvents_;
     std::vector<struct epoll_event> events_;
 
     EventCallback readHandler_;
