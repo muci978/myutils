@@ -1,7 +1,7 @@
 # 日志相关
 log:
   # 日志输出目录, 必须是绝对路径
-  logPath: "/home/muci/myutils/bin/log"
+  logPath: "/root/myutils/bin/log"
   # 日志命名
   logName: "cpp_core.log"
   # DEBUG：0；INFO：1；WARN：2；ERROR：3；DEFAULT：INFO
@@ -26,7 +26,27 @@ reactor:
   # reactor最大事件数量
   reactorMaxEvent: 10
   # reactor超时时间(ms)
-  reactorTimeout: -1
+  reactorTimeout: 100 # 防止无法计时感知到退出
+  # 白名单ip
+  whiteList: []
+  # 黑名单ip
+  blackList: []
+  # 连接数上限(-1:不限制)
+  maxConnection: -1
+  # udp监听端口号
+  udpListenPort: 6800
+  # udp监听ip
+  udpListenIp: "0.0.0.0"
+  # tcp监听端口号
+  tcpListenPort: 6800
+  # tcp监听ip
+  tcpListenIp: "0.0.0.0"
+  # 心跳间隔时间(s)
+  heartbeatInterval: 30
+  # 心跳超时时间(s)
+  heartbeatTimeout: 90
+  # 心跳检测间隔时间(s)
+  heartbeatCheckInterval: 15
 
 # 控制台相关
 console:
@@ -47,6 +67,6 @@ process:
   daemonMode: false
   # coredump软上限(默认约2GB)
   coreLimitCur: 2000000000
-  # coredump硬上限(默认约2GB)
+  # coredump硬上线(默认约2GB)
   coreLimitMax: 2000000000
 

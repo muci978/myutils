@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 struct ConfigPimpl
 {
@@ -21,6 +22,16 @@ struct ConfigPimpl
     int reactorCount;
     int reactorMaxEvent;
     int reactorTimeout;
+    std::vector<std::string> whiteList;
+    std::vector<std::string> blackList;
+    int maxConnection;
+    int udpListenPort;
+    int tcpListenPort;
+    std::string udpListenIp;
+    std::string tcpListenIp;
+    int heartbeatInterval;
+    int heartbeatTimeout;
+    int heartbeatCheckInterval;
 
     // 控制台相关
     std::string consoleListenIp;

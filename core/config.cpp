@@ -40,6 +40,16 @@ void ConfigPimpl::Load(const std::string &configPath)
         reactorCount = reactorNode["reactorCount"].as<int>();
         reactorMaxEvent = reactorNode["reactorMaxEvent"].as<int>();
         reactorTimeout = reactorNode["reactorTimeout"].as<int>();
+        whiteList = reactorNode["whiteList"].as<std::vector<std::string>>();
+        blackList = reactorNode["blackList"].as<std::vector<std::string>>();
+        maxConnection = reactorNode["maxConnection"].as<int>();
+        udpListenPort = reactorNode["udpListenPort"].as<int>();
+        tcpListenPort = reactorNode["tcpListenPort"].as<int>();
+        udpListenIp = reactorNode["udpListenIp"].as<std::string>();
+        tcpListenIp = reactorNode["tcpListenIp"].as<std::string>();
+        heartbeatInterval = reactorNode["heartbeatInterval"].as<int>();
+        heartbeatTimeout = reactorNode["heartbeatTimeout"].as<int>();
+        heartbeatCheckInterval = reactorNode["heartbeatCheckInterval"].as<int>();
     }
     else
     {

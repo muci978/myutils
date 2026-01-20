@@ -1,24 +1,51 @@
 #ifndef EPOLL_SELECTOR_H
 #define EPOLL_SELECTOR_H
 
-#include "manager.h"
+#include <sys/epoll.h>
+#include <functional>
+#include <vector>
 
-class ConfigPimpl;
+class SocketBase;
 
-class EpollSelector : public Manager
+enum
 {
+    EpollMaxEvents = 1024,
+    EpollTimeout = 100,
+};
+
+enum
+{
+    Read = EPOLLIN | EPOLLRDHUP,
+    Write = EPOLLOUT,
+    ReadWrite = Read | Write,
+    ET = EPOLLET,
+    Oneshot = EPOLLONESHOT,
+};
+class EpollSelector
+{
+    using EventCallback = std::function<void(EpollSelector *, SocketBase *)>;
+
 public:
-    explicit EpollSelector();
+    EpollSelector(EventCallback r, EventCallback w, EventCallback e, int maxEvents = EpollMaxEvents, int timeout = EpollTimeout);
     ~EpollSelector();
 
-public:
-    virtual bool Init() override;
-    virtual bool Start() override;
-    virtual bool Stop() override;
+    bool Init();
+
+    bool AddEvent(SocketBase *s, int event);
+    bool ModifyEvent(SocketBase *s, int event);
+    bool RemoveEvent(SocketBase *s);
+
+    void Work();
 
 private:
     int epollFd_;
-    ConfigPimpl* configInfo_;
+    int timeout_;
+    int maxEvents_;
+    std::vector<struct epoll_event> events_;
+
+    EventCallback readHandler_;
+    EventCallback writeHandler_;
+    EventCallback errHandler_;
 };
 
 #endif // EPOLL_SELECTOR_H

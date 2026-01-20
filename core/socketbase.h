@@ -15,13 +15,13 @@ class SocketBase
 {
 public:
     SocketBase()
-        : type_(SocketType::UNKNOWN),
-          socket_(-1),
-          localIp_(0),
-          peerIp_(0),
-          localPort_(0),
-          peerPort_(0),
-          ipv6Flag_(false),
+        : type(SocketType::UNKNOWN),
+          socket(-1),
+          localIp(0),
+          peerIp(0),
+          localPort(0),
+          peerPort(0),
+          ipv6Flag(false),
           enable_(false) {}
     virtual ~SocketBase() = default;
 
@@ -32,17 +32,17 @@ public:
     virtual void OnWrite() = 0;
 
 public:
-    SocketType type_;
+    SocketType type;
 
-    int socket_;
-    uint32_t localIp_;
-    uint32_t peerIp_;
-    uint16_t localPort_;
-    uint16_t peerPort_;
+    int socket;
+    uint32_t localIp;
+    uint32_t peerIp;
+    uint16_t localPort;
+    uint16_t peerPort;
 
-    bool ipv6Flag_;
-    std::string localIpStr_;
-    std::string peerIpStr_;
+    bool ipv6Flag;
+    std::string localIpStr;
+    std::string peerIpStr;
 
     bool enable_;
 };
