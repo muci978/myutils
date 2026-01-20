@@ -1,7 +1,9 @@
 #include "epoll_selector.h"
+#include <stdexcept>
 #include <string.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <stdexcept>
 #include "logger.h"
 #include "socketbase.h"
 #include "process.h"
@@ -15,6 +17,11 @@ EpollSelector::EpollSelector(EventCallback r, EventCallback w, EventCallback e, 
       maxEvents_(maxEvents),
       events_(maxEvents)
 {
+    epollFd_ = epoll_create1(EPOLL_CLOEXEC);
+    if (-1 == epollFd_)
+    {
+        throw std::runtime_error(std::string("epoll create error, err: ") + strerror(errno));
+    }
 }
 
 EpollSelector::~EpollSelector()
@@ -24,23 +31,6 @@ EpollSelector::~EpollSelector()
         close(epollFd_);
         epollFd_ = -1;
     }
-}
-
-bool EpollSelector::Init()
-{
-    if (-1 != epollFd_)
-    {
-        error("epoll has been call Init, can not call again");
-        return false;
-    }
-    epollFd_ = epoll_create1(EPOLL_CLOEXEC);
-    if (-1 == epollFd_)
-    {
-        error("epoll create error, err: {}", strerror(errno));
-        return false;
-    }
-
-    return true;
 }
 
 bool EpollSelector::AddEvent(SocketBase *s, int event)
@@ -112,9 +102,10 @@ bool EpollSelector::RemoveEvent(SocketBase *s)
     return true;
 }
 
-void EpollSelector::Work()
+void EpollSelector::Work(std::function<bool()> stop = []
+                         { return ProcessManager::GetInstance().IsPrepareExit(); })
 {
-    while (!ProcessManager::GetInstance().IsPrepareExit())
+    while (!stop())
     {
         int nfds = epoll_wait(epollFd_, events_.data(), maxEvents_, timeout_);
         if (nfds < 0)

@@ -29,13 +29,11 @@ public:
     EpollSelector(EventCallback r, EventCallback w, EventCallback e, int maxEvents = EpollMaxEvents, int timeout = EpollTimeout);
     ~EpollSelector();
 
-    bool Init();
-
     bool AddEvent(SocketBase *s, int event);
     bool ModifyEvent(SocketBase *s, int event);
     bool RemoveEvent(SocketBase *s);
 
-    void Work();
+    void Work(std::function<bool()> stop);
 
 private:
     int epollFd_;
