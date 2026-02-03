@@ -5,15 +5,24 @@
 #include "threadpool.h"
 #include "logger.h"
 #include "epoll_selector.h"
+#include "reactor_pimpl.h"
+#include "socketbase.h"
 
-ReactorManager::ReactorManager() {}
-
-ReactorManager::~ReactorManager()
+void ReactorPimpl::MasterReadHandler(EpollSelector *selector, SocketBase *s)
 {
-    Stop();
+    if (nullptr == selector || nullptr == s)
+    {
+        error("invalid param");
+        return;
+    }
+
+    if (SocketType::TCP == s->type)
+    {
+        
+    }
 }
 
-bool ReactorManager::Init()
+bool ReactorPimpl::Init()
 {
     auto configInfo = ConfigManager::GetInstance().GetInfo();
     reactorCount_ = configInfo->reactorCount;
@@ -30,28 +39,25 @@ bool ReactorManager::Init()
     whiteList_ = configInfo->whiteList;
     blackList_ = configInfo->blackList;
 
-    return true;
-}
-
-bool ReactorManager::Start()
-{
-    reactors_ = new ThreadPool("ReactorPool", reactorCount_, reactorCount_);
-
-    if (!reactors_->Start())
+    slaveThreads_.reset(new ThreadPool("SlaveReactorPool", reactorCount_, reactorCount_));
+    if (nullptr == slaveThreads_)
     {
+        error("create slave thread pool failed, err: {}", std::strerror(errno));
         return false;
     }
-    for(int i = 0; i < reactorCount_; ++i)
+    master_ = std::make_shared<EpollSelector>(reactorMaxEvent_, reactorTimeout_);
+    if (nullptr == master_)
     {
-        try
+        error("create master selector failed, err: {}", std::strerror(errno));
+        return false;
+    }
+    slaves_.resize(reactorCount_);
+    for (int i = 0; i < reactorCount_; ++i)
+    {
+        slaves_[i] = std::make_shared<EpollSelector>(reactorMaxEvent_, reactorTimeout_);
+        if (nullptr == slaves_[i])
         {
-            auto ret = reactors_->AddTask(WorkerThread, this);
-            ret.get();
-        }
-        catch (const std::exception &e)
-        {
-            error("{} throws exception: {}", "ReactorPool", e.what());
-            Stop();
+            error("create slave selector failed, err: {}", std::strerror(errno));
             return false;
         }
     }
@@ -59,27 +65,27 @@ bool ReactorManager::Start()
     return true;
 }
 
-bool ReactorManager::Stop()
+ReactorManager::ReactorManager()
+    : base_(new ReactorPimpl) {}
+
+ReactorManager::~ReactorManager()
 {
-    if(nullptr != reactors_)
-    {
-        reactors_->Stop();
-        delete reactors_;
-        reactors_ = nullptr;
-    }
-    return true;
+    Stop();
+    delete base_;
+    base_ = nullptr;
 }
 
-void ReactorManager::WorkerThread(ReactorManager *manager)
+bool ReactorManager::Init()
 {
-    EpollSelector selector;
-    if(!selector.Init())
-    {
-        throw std::runtime_error("EpollSelector init failed");
-    }
-    if(!selector.Start())
-    {
-        throw std::runtime_error("EpollSelector start failed");
-    }
-    
+    return base_->Init();
+}
+
+bool ReactorManager::Start()
+{
+    return base_->Start();
+}
+
+bool ReactorManager::Stop()
+{
+    return base_->Stop();
 }

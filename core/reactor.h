@@ -4,37 +4,23 @@
 #include <vector>
 #include <string>
 #include "manager.h"
+#include "singleton.h"
 
 class ThreadPool;
+class ReactorPimpl;
 
-class ReactorManager : public Manager
+class ReactorManager : public Manager, public Singleton<ReactorManager>
 {
-public:
-    explicit ReactorManager();
-    ~ReactorManager();
-
 public:
     virtual bool Init() override;
     virtual bool Start() override;
     virtual bool Stop() override;
 
 private:
-    static void WorkerThread(ReactorManager *manager);
+    explicit ReactorManager();
+    ~ReactorManager();
 
-    ThreadPool *reactors_;
-    int reactorCount_;
-    int reactorMaxEvent_;
-    int reactorTimeout_;
-    std::vector<std::string> whiteList_;
-    std::vector<std::string> blackList_;
-    int maxConnection_;
-    int udpListenPort_;
-    int tcpListenPort_;
-    std::string udpListenIp_;
-    std::string tcpListenIp_;
-    int heartbeatInterval_;
-    int heartbeatTimeout_;
-    int heartbeatCheckInterval_;
+    ReactorPimpl* base_;
 };
 
 #endif // REACTOR_H

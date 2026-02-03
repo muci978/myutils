@@ -4,6 +4,7 @@
 #include <sys/epoll.h>
 #include <functional>
 #include <vector>
+#include <memory>
 
 class SocketBase;
 
@@ -26,7 +27,7 @@ class EpollSelector
     using EventCallback = std::function<void(EpollSelector *, SocketBase *)>;
 
 public:
-    explicit EpollSelector(EventCallback r, EventCallback w, EventCallback e, int maxEvents = EpollMaxEvents, int timeout = EpollTimeout);
+    explicit EpollSelector(int maxEvents = EpollMaxEvents, int timeout = EpollTimeout);
     ~EpollSelector();
 
     bool AddEvent(SocketBase *s, int event);
@@ -34,6 +35,18 @@ public:
     bool RemoveEvent(SocketBase *s);
 
     void Work(std::function<bool()> stop);
+    void SetReadHandler(EventCallback cb)
+    {
+        readHandler_ = cb;
+    }
+    void SetWriteHandler(EventCallback cb)
+    {
+        writeHandler_ = cb;
+    }
+    void SetErrHandler(EventCallback cb)
+    {
+        errHandler_ = cb;
+    }
 
 private:
     int epollFd_;

@@ -8,11 +8,8 @@
 #include "socketbase.h"
 #include "process.h"
 
-EpollSelector::EpollSelector(EventCallback r, EventCallback w, EventCallback e, int maxEvents, int timeout)
-    : readHandler_(r),
-      writeHandler_(w),
-      errHandler_(e),
-      epollFd_(-1),
+EpollSelector::EpollSelector(int maxEvents, int timeout)
+    : epollFd_(-1),
       timeout_(timeout),
       maxEvents_(maxEvents),
       events_(maxEvents)
